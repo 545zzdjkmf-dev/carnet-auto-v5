@@ -80,6 +80,7 @@ main{max-width:1180px}
 <div><label for="price">Prix au litre (€)</label><input id="price" type="number" min="0" step="0.001" placeholder="Ex. 1,789"></div>
 <div><label for="total">Montant payé (€)</label><input id="total" type="number" min="0" step="0.01" placeholder="Calculé si vide"></div>
 <div><label for="station">Station (facultatif)</label><input id="station" placeholder="Nom ou ville"></div>
+<div><label for="brand">Pétrolier / enseigne</label><select id="brand"><option value="independent">Indépendante / autre</option><option value="totalenergies">TotalEnergies</option><option value="shell">Shell</option><option value="esso">Esso</option><option value="bp">BP</option><option value="avia">AVIA</option><option value="eni">Eni / Agip</option><option value="q8">Q8</option><option value="texaco">Texaco</option><option value="intermarche">Intermarché</option><option value="leclerc">E.Leclerc</option><option value="carrefour">Carrefour</option><option value="auchan">Auchan</option><option value="colruyt">Colruyt</option><option value="other">Autre enseigne</option></select></div>
 </div>
 <label><input id="fullTank" type="checkbox" checked style="width:auto;min-height:0;margin-right:7px">Plein complet</label>
 <label for="notes">Note (facultatif)</label><input id="notes" placeholder="Ex. trajet autoroute">
@@ -109,21 +110,29 @@ main{max-width:1180px}
 <div class="row"><button id="exportCsv" class="btn">Exporter les pleins (CSV)</button><button id="exportJson" class="btn secondary">Sauvegarde complète</button></div>
 <label for="importFile">Restaurer une sauvegarde JSON</label><input id="importFile" type="file" accept=".json,application/json"><button id="importJson" class="btn secondary">Importer la sauvegarde</button>
 </div>
-<div class="card"><h2>Synchronisation iCloud — étape de configuration</h2>
-<div class="notice">Cette version améliorée est prête pour une configuration CloudKit, mais la synchronisation iCloud n'est pas encore active. Il faut créer/configurer un conteneur Apple, activer CloudKit JS et l'authentification web, puis intégrer les identifiants propres à ton compte. Ne colle jamais un secret serveur dans le code d'une PWA.</div>
-<ol style="padding-left:20px;line-height:1.6">
-<li>Sur le Mac, ouvre le portail développeur Apple et vérifie l'accès à CloudKit Console.</li>
-<li>Crée un conteneur iCloud et configure son schéma dans CloudKit Console.</li>
-<li>Active les services Web et l'authentification utilisateur selon la documentation officielle.</li>
-<li>Une fois le conteneur configuré, l'application doit recevoir un module CloudKit adapté, puis être testée sur l'iPhone et l'iPad avec le même compte Apple.</li>
-</ol>
-<p><a href="https://developer.apple.com/documentation/cloudkitjs" target="_blank" rel="noopener">Documentation officielle CloudKit JS</a> · <a href="https://icloud.developer.apple.com/" target="_blank" rel="noopener">CloudKit Console</a></p>
+<div class="card"><h2>Synchronisation entre appareils — Firebase</h2>
+<p class="muted">Connecte-toi avec la même adresse e-mail sur l’iPhone, l’iPad et le Mac pour retrouver les mêmes véhicules et pleins. La synchronisation nécessite la configuration Web Firebase ci-dessous.</p>
+<div id="firebaseStatus" class="notice">Firebase n’est pas encore configuré. Récupère les paramètres de l’application Web dans les paramètres du projet Firebase.</div>
+<h3 style="margin-top:16px">1. Paramètres de l’application Web Firebase</h3>
+<form id="firebaseConfigForm"><label for="fbApiKey">apiKey</label><input id="fbApiKey" autocomplete="off" placeholder="AIza…" required>
+<label for="fbAuthDomain">authDomain</label><input id="fbAuthDomain" placeholder="ton-projet.firebaseapp.com" required>
+<label for="fbProjectId">projectId</label><input id="fbProjectId" placeholder="Identifiant du projet" required>
+<label for="fbAppId">appId</label><input id="fbAppId" placeholder="1:…:web:…" required>
+<button class="btn" type="submit">Enregistrer la configuration Firebase</button></form>
+<h3 style="margin-top:20px">2. Compte de synchronisation</h3>
+<form id="authForm"><label for="authEmail">Adresse e-mail</label><input id="authEmail" type="email" autocomplete="username" required placeholder="toi@exemple.fr"><label for="authPassword">Mot de passe</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required><div class="row"><button class="btn" type="submit">Se connecter</button><button id="createAccount" class="btn secondary" type="button">Créer un compte</button></div></form>
+<div class="row"><button id="signOut" class="btn secondary" type="button">Se déconnecter</button><button id="syncNow" class="btn secondary" type="button">Synchroniser maintenant</button></div>
+<p class="muted">Les paramètres Web Firebase ne sont pas des mots de passe serveur. N’ajoute jamais de clé privée ou de compte de service dans cette page.</p>
 </div>
+
 <div class="card"><h2>Prix des carburants en France</h2><div class="notice">Les données publiques officielles sont publiées par le gouvernement, avec un flux instantané annoncé comme actualisé à moins de 10 minutes. L'application n'affiche pas automatiquement ces prix dans cette version, car le flux est un ZIP/XML et peut être bloqué par les règles d'accès du navigateur. Pour éviter un prix erroné, saisis le prix affiché à la pompe dans le formulaire de plein.</div><a class="btn" style="display:inline-block;text-decoration:none" href="https://www.prix-carburants.gouv.fr/" target="_blank" rel="noopener">Consulter le site officiel des prix</a><p class="muted">Flux open data officiel : <a href="https://donnees.roulez-eco.fr/opendata/instantane" target="_blank" rel="noopener">instantané des prix (XML compressé)</a>.</p></div>
 <div class="card"><h2>Réinitialiser</h2><p class="muted">Supprime définitivement les véhicules et pleins enregistrés sur cet appareil.</p><button id="clearAll" class="btn danger">Effacer toutes les données</button></div>
 </section>
 </main>
 <footer>Carnet Auto · Données stockées localement sur cet appareil.</footer>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 const KEY='carnetAuto.v1';
 let db={cars:[],fills:[]};
@@ -132,7 +141,7 @@ const fmt=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('fr-FR',{minimumFractionD
 const euro=n=>Number.isFinite(n)?n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'}):'—';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&Array.isArray(x.cars)&&Array.isArray(x.fills))db=x}catch(e){}}
-function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll();if(window.firebaseUser&&window.firebaseDb)syncToCloud().catch(e=>setFirebaseStatus('Erreur de synchronisation : '+(e.message||e)));}
 function selectedCar(){return $('dashCar').value||db.cars[0]?.id||''}
 function carName(id){return db.cars.find(c=>c.id===id)?.name||'Véhicule supprimé'}
 function carFills(id){return db.fills.filter(f=>f.carId===id).sort((a,b)=>a.odo-b.odo||a.date.localeCompare(b.date))}
@@ -146,7 +155,7 @@ function stats(id){
  return {fs,segments,avg:km>0?used/km*100:NaN,km,litres,spend};
 }
 function options(select,all=true){const el=$(select),old=el.value;el.innerHTML=(all?'<option value="all">Tous les véhicules</option>':'')+db.cars.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}${c.plate?' · '+esc(c.plate):''}</option>`).join('');if([...el.options].some(o=>o.value===old))el.value=old;else if(db.cars.length)el.value=db.cars[0].id}
-function renderCars(){ $('carList').innerHTML=db.cars.length?db.cars.map(c=>`<div class="list-item"><div class="row"><div><strong>${esc(c.name)}</strong><small>${esc(c.plate||'Immatriculation non renseignée')} · ${esc(c.fuel)}</small></div><div><button class="smallbtn" onclick="editCar('${c.id}')">Modifier</button> <button class="smallbtn" onclick="editCar('${c.id}')">Modifier</button><button class="smallbtn" onclick="deleteCar('${c.id}')">Supprimer</button></div></div></div>`).join(''):'<div class="empty">Aucun véhicule. Ajoute ta première voiture ci-dessus.</div>'}
+function renderCars(){ $('carList').innerHTML=db.cars.length?db.cars.map(c=>`<div class="list-item"><div class="row"><div><strong>${esc(c.name)}</strong><small>${esc(c.plate||'Immatriculation non renseignée')} · ${esc(c.fuel)}</small></div><div><button class="smallbtn" onclick="editCar('${c.id}')">Modifier</button> <button class="smallbtn" onclick="deleteCar('${c.id}')">Supprimer</button></div></div></div>`).join(''):'<div class="empty">Aucun véhicule. Ajoute ta première voiture ci-dessus.</div>'}
 function renderFills(){let id=$('historyCar').value||'all';let fs=db.fills.filter(f=>id==='all'||f.carId===id).sort((a,b)=>b.date.localeCompare(a.date)||b.odo-a.odo);
 $('fillList').innerHTML=fs.length?fs.map(f=>`<div class="list-item"><div class="row"><div><strong>${esc(f.date)} · ${esc(carName(f.carId))}</strong><small>${fmt(f.odo,0)} km · ${fmt(f.litres,2)} L · ${f.full?'<span class="success">Plein complet</span>':'Plein partiel'}</small><small>${brandLabel(f.brand)} · ${esc(f.station||'')} ${f.price!=null?'· '+fmt(f.price,3)+' €/L':''} ${f.total!=null?'· '+euro(f.total):''}</small></div><button class="smallbtn" onclick="deleteFill('${f.id}')">Supprimer</button></div>${f.notes?`<small>${esc(f.notes)}</small>`:''}</div>`).join(''):'<div class="empty">Aucun plein enregistré pour ce filtre.</div>'}
 function renderRecent(){const id=selectedCar();const fs=carFills(id).slice(-4).reverse();$('recent').innerHTML=fs.length?fs.map(f=>`<div class="list-item"><strong>${esc(f.date)} · ${fmt(f.litres,2)} L</strong><small>${fmt(f.odo,0)} km · ${f.total!=null?euro(f.total):'montant non renseigné'} · ${f.full?'Plein complet':'Partiel'} · ${brandLabel(f.brand)}</small></div>`).join(''):'<div class="empty">Ajoute un véhicule et enregistre ton premier plein pour commencer.</div>'}
@@ -188,6 +197,24 @@ $('exportCsv').addEventListener('click',()=>{const rows=[['Date','Vehicule','Imm
 $('importJson').addEventListener('click',async()=>{const file=$('importFile').files[0];if(!file){alert('Choisis un fichier JSON.');return}try{const x=JSON.parse(await file.text());if(!Array.isArray(x.cars)||!Array.isArray(x.fills))throw Error();if(!confirm('Remplacer les données actuelles par cette sauvegarde ?'))return;db=x;save();alert('Sauvegarde restaurée.')}catch(e){alert('Fichier invalide ou incompatible.')}});
 $('clearAll').addEventListener('click',()=>{if(confirm('Effacer définitivement tous les véhicules et pleins de cet appareil ?')){db={cars:[],fills:[]};save()}});
 $('countryPrice').addEventListener('change',()=>{$('frPrice').classList.toggle('hidden',$('countryPrice').value!=='fr');$('bePrice').classList.toggle('hidden',$('countryPrice').value!=='be')});
+let firebaseApp=null, firebaseDb=null, firebaseAuth=null, firebaseUser=null, syncBusy=false;
+window.firebaseDb=null;window.firebaseUser=null;
+function setFirebaseStatus(msg){const el=$('firebaseStatus');if(el)el.textContent=msg}
+function getFirebaseConfig(){try{return JSON.parse(localStorage.getItem('carnetAuto.firebaseConfig')||'null')}catch(e){return null}}
+function initFirebase(cfg){
+ if(!window.firebase||!firebase.initializeApp){setFirebaseStatus('Impossible de charger Firebase. Vérifie la connexion Internet puis recharge la page.');return false}
+ try{if(firebase.apps.length)firebaseApp=firebase.app();else firebaseApp=firebase.initializeApp(cfg);firebaseAuth=firebase.auth();firebaseDb=firebase.firestore();window.firebaseDb=firebaseDb;
+ firebaseAuth.onAuthStateChanged(async user=>{firebaseUser=user;window.firebaseUser=user;if(user){setFirebaseStatus('Connecté : '+user.email+' — chargement des données cloud…');await loadFromCloud();}else setFirebaseStatus('Firebase configuré, mais aucun compte connecté.');});return true
+ }catch(e){setFirebaseStatus('Configuration Firebase invalide : '+e.message);return false}
+}
+async function syncToCloud(){if(!firebaseUser||!firebaseDb||syncBusy)return;syncBusy=true;try{await firebaseDb.collection('users').doc(firebaseUser.uid).collection('app').doc('data').set({payload:db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});setFirebaseStatus('Synchronisé avec Firebase — '+firebaseUser.email)}finally{syncBusy=false}}
+async function loadFromCloud(){if(!firebaseUser||!firebaseDb)return;try{const ref=firebaseDb.collection('users').doc(firebaseUser.uid).collection('app').doc('data');const snap=await ref.get();if(snap.exists&&snap.data().payload){const cloud=snap.data().payload;if(Array.isArray(cloud.cars)&&Array.isArray(cloud.fills)){db=cloud;localStorage.setItem(KEY,JSON.stringify(db));renderAll();setFirebaseStatus('Données chargées depuis Firebase — '+firebaseUser.email);return}}await syncToCloud();setFirebaseStatus('Première synchronisation terminée — données locales copiées dans Firebase.')}catch(e){setFirebaseStatus('Échec du chargement cloud : '+e.message+'. Vérifie les règles Firestore.')}}
+$('firebaseConfigForm').addEventListener('submit',e=>{e.preventDefault();const cfg={apiKey:$('fbApiKey').value.trim(),authDomain:$('fbAuthDomain').value.trim(),projectId:$('fbProjectId').value.trim(),appId:$('fbAppId').value.trim()};localStorage.setItem('carnetAuto.firebaseConfig',JSON.stringify(cfg));if(initFirebase(cfg))setFirebaseStatus('Configuration enregistrée. Connecte-toi ou crée ton compte.');});
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();if(!firebaseAuth){alert('Enregistre d’abord la configuration Firebase.');return}try{await firebaseAuth.signInWithEmailAndPassword($('authEmail').value.trim(),$('authPassword').value);setFirebaseStatus('Connexion en cours…')}catch(err){alert('Connexion impossible : '+err.message)}});
+$('createAccount').addEventListener('click',async()=>{if(!firebaseAuth){alert('Enregistre d’abord la configuration Firebase.');return}try{await firebaseAuth.createUserWithEmailAndPassword($('authEmail').value.trim(),$('authPassword').value);alert('Compte créé. Tu es connecté.')}catch(err){alert('Création du compte impossible : '+err.message)}});
+$('signOut').addEventListener('click',async()=>{if(firebaseAuth)try{await firebaseAuth.signOut()}catch(e){alert(e.message)}});
+$('syncNow').addEventListener('click',async()=>{if(!firebaseUser){alert('Connecte-toi d’abord.');return}try{await syncToCloud();alert('Synchronisation terminée.')}catch(e){alert('Synchronisation impossible : '+e.message)}});
+const savedFirebaseConfig=getFirebaseConfig();if(savedFirebaseConfig){$('fbApiKey').value=savedFirebaseConfig.apiKey||'';$('fbAuthDomain').value=savedFirebaseConfig.authDomain||'';$('fbProjectId').value=savedFirebaseConfig.projectId||'';$('fbAppId').value=savedFirebaseConfig.appId||'';initFirebase(savedFirebaseConfig)}
 load();$('fillDate').value=new Date().toISOString().slice(0,10);renderAll();
 if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
