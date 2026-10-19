@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#142b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Carnet Auto">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Carnet Auto</title>
+<style>
+:root{--navy:#142b4a;--blue:#2463eb;--bg:#f3f6fb;--card:#fff;--ink:#172033;--muted:#65718a;--line:#dfe6f0;--green:#147d54;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+header{background:var(--navy);color:#fff;padding:22px 18px 18px;position:sticky;top:0;z-index:3}header .eyebrow{font-size:12px;opacity:.8;letter-spacing:.1em;text-transform:uppercase}header h1{font-size:25px;margin:5px 0}header p{margin:0;color:#d9e5f6;font-size:14px}
+main{max-width:900px;margin:auto;padding:14px}nav{display:flex;gap:8px;overflow:auto;margin:0 0 14px;padding-bottom:3px}nav button{white-space:nowrap;background:#e4eaf4;color:var(--navy);border:0;border-radius:12px;padding:11px 14px;font-weight:650}nav button.active{background:var(--blue);color:white}
+.panel{display:none}.panel.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:16px;margin-bottom:13px;box-shadow:0 2px 8px #1d35570a}
+h2{font-size:19px;margin:0 0 13px}h3{font-size:16px;margin:0 0 10px}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{background:#f2f6fc;border-radius:13px;padding:13px;min-width:0}.metric small{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:23px;margin-top:6px;overflow-wrap:anywhere}.metric span{font-size:12px;color:var(--muted)}
+label{display:block;font-size:13px;font-weight:650;margin:11px 0 5px}input,select,textarea{font:inherit;width:100%;border:1px solid #cbd5e3;border-radius:10px;background:white;padding:11px;color:var(--ink);min-height:43px}button{font:inherit;cursor:pointer}.btn{border:0;border-radius:11px;padding:12px 15px;font-weight:700;background:var(--blue);color:white;margin-top:12px}.btn.secondary{background:#e8eef8;color:var(--navy)}.btn.danger{background:#fff0ef;color:var(--red)}.row{display:flex;gap:9px;align-items:center}.row>*{flex:1;min-width:0}.list-item{padding:12px 0;border-bottom:1px solid var(--line)}.list-item:last-child{border-bottom:0}.list-item strong{display:block}.list-item small{color:var(--muted)}.tag{display:inline-block;border-radius:7px;background:#eaf1ff;color:#244e9c;padding:4px 7px;font-size:11px;font-weight:700}
+canvas{width:100%;height:230px;display:block}.empty{padding:18px;text-align:center;color:var(--muted);font-size:14px}.notice{background:#fff8e6;border:1px solid #f2d58b;border-radius:12px;padding:12px;font-size:13px;line-height:1.45}.success{color:var(--green)}.smallbtn{border:0;border-radius:8px;padding:7px 9px;background:#edf2f8;color:var(--navy);font-size:12px;font-weight:650}.brand-icon{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:32px;border-radius:8px;background:#f2f5fa;border:1px solid var(--line);font-size:10px;font-weight:850;color:#172033;flex-shrink:0}.brand-totalenergies{background:#eaf7ef;color:#147d54}.brand-shell{background:#fff4d8;color:#b42318}.brand-esso{background:#eaf1ff;color:#174ea6}.brand-bp{background:#eaf7ef;color:#147d54}.brand-summary{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.brand-summary:last-child{border-bottom:0}.brand-summary .name{display:flex;align-items:center;gap:10px;font-weight:650}.hidden{display:none!important}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:12px 18px 26px}
+@media(min-width:650px){
+main{padding:24px}
+header{padding-left:max(24px,calc((100vw - 1100px)/2));padding-right:max(24px,calc((100vw - 1100px)/2))}
+.grid.formgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+#dashboard .dashboard-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:14px;align-items:start}
+#dashboard .dashboard-layout .card{height:100%}
+#dashboard .card{padding:20px}
+#dashboard canvas{height:280px}
+nav{position:sticky;top:100px;background:var(--bg);padding:8px 0;z-index:2}
+}
+@media(min-width:1000px){
+main{max-width:1180px}
+#dashboard .grid.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+#dashboard .dashboard-layout{grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr)}
+#dashboard canvas{height:320px}
+}
+
+</style>
+</head>
+<body>
+<header><div class="eyebrow">Carnet de bord numérique</div><h1>Carnet Auto</h1><p>Carburant · Consommation · Budget</p></header>
+<main>
+<nav aria-label="Navigation">
+<button class="active" data-tab="dashboard">Tableau de bord</button><button data-tab="cars">Mes voitures</button><button data-tab="fill">Ajouter un plein</button><button data-tab="history">Historique</button><button data-tab="stats">Graphiques</button><button data-tab="prices">Prix France / Belgique</button><button data-tab="backup">Export & sauvegarde</button>
+</nav>
+<section id="dashboard" class="panel active">
+<div class="card"><div class="row"><div><h2>Mon tableau de bord</h2><div class="muted">Sélectionne un véhicule pour voir ses chiffres.</div></div><div><select id="dashCar" aria-label="Véhicule du tableau de bord"></select></div></div></div>
+<div class="grid metrics">
+<div class="metric"><small>Consommation moyenne</small><strong id="avg">—</strong><span>L/100 km</span></div>
+<div class="metric"><small>Distance suivie</small><strong id="distance">—</strong><span>km enregistrés</span></div>
+<div class="metric"><small>Carburant saisi</small><strong id="litres">—</strong><span>litres depuis le début</span></div>
+<div class="metric"><small>Budget carburant</small><strong id="spend">—</strong><span>tous les pleins saisis</span></div>
+</div>
+<div class="dashboard-layout">
+<div class="card"><h2>Consommation dans le temps</h2><canvas id="dashChart" width="720" height="300" aria-label="Graphique de consommation"></canvas><div class="muted">Calcul fiable à partir des pleins complets successifs. Les données insuffisantes sont ignorées.</div></div>
+<div class="card"><h2>Derniers pleins</h2><div id="recent"></div><div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)"><h3>État des données</h3><div class="tag">Stockage local actif</div><p class="muted">La synchronisation iCloud n'est pas encore activée. Utilise Export & tarifs pour sauvegarder ou restaurer un fichier JSON.</p></div></div>
+</div>
+<div class="card"><h2>Dépenses par pétrolier</h2><p class="muted">Total des litres et euros enregistrés par enseigne pour le véhicule sélectionné.</p><div id="brandDashboard"></div></div>
+</section>
+<section id="cars" class="panel">
+<div class="card"><h2>Ajouter un véhicule</h2>
+<form id="carForm"><div class="grid formgrid">
+<div><label for="carName">Nom du véhicule *</label><input id="carName" required placeholder="Ex. Mercedes Classe A"></div>
+<div><label for="plate">Immatriculation</label><input id="plate" placeholder="AB-123-CD" autocapitalize="characters"></div>
+<div><label for="fuelType">Carburant *</label><select id="fuelType" required><option>SP95-E10</option><option>SP95</option><option>SP98</option><option>Gazole</option><option>E85</option><option>GPL</option><option>Électrique</option><option>Hybride rechargeable - essence</option><option>Hybride rechargeable - diesel</option><option>Autre</option></select></div>
+</div><button class="btn" type="submit">Ajouter le véhicule</button></form></div>
+<div class="card"><h2>Mon garage</h2><div id="carList"></div></div>
+</section>
+<section id="fill" class="panel">
+<div class="card"><h2>Enregistrer un plein</h2>
+<form id="fillForm">
+<label for="fillCar">Véhicule *</label><select id="fillCar" required></select>
+<div class="grid formgrid">
+<div><label for="fillDate">Date *</label><input id="fillDate" type="date" required></div>
+<div><label for="odo">Kilométrage compteur (km) *</label><input id="odo" type="number" min="0" step="1" required placeholder="Ex. 42850"></div>
+<div><label for="volume">Litres ajoutés *</label><input id="volume" type="number" min="0.01" step="0.01" required placeholder="Ex. 42,5"></div>
+<div><label for="price">Prix au litre (€)</label><input id="price" type="number" min="0" step="0.001" placeholder="Ex. 1,789"></div>
+<div><label for="total">Montant payé (€)</label><input id="total" type="number" min="0" step="0.01" placeholder="Calculé si vide"></div>
+<div><label for="station">Station (facultatif)</label><input id="station" placeholder="Nom ou ville"></div>
+</div>
+<label><input id="fullTank" type="checkbox" checked style="width:auto;min-height:0;margin-right:7px">Plein complet</label>
+<label for="notes">Note (facultatif)</label><input id="notes" placeholder="Ex. trajet autoroute">
+<button class="btn" type="submit">Enregistrer le plein</button>
+<p class="muted">Astuce : coche « Plein complet » quand le réservoir est rempli jusqu'au déclenchement du pistolet. Les pleins partiels sont pris en compte dans le total de carburant entre deux pleins complets.</p>
+</form></div>
+</section>
+<section id="history" class="panel"><div class="card"><div class="row"><h2 style="flex:2">Historique des pleins</h2><select id="historyCar" aria-label="Filtrer par véhicule"></select></div><div id="fillList"></div></div></section>
+<section id="stats" class="panel">
+<div class="card"><h2>Analyse graphique</h2><label for="statsCar">Véhicule</label><select id="statsCar"></select>
+<h3 style="margin-top:18px">Consommation (L/100 km)</h3><canvas id="consChart" width="720" height="300"></canvas>
+<h3 style="margin-top:18px">Dépenses par mois (€)</h3><canvas id="costChart" width="720" height="300"></canvas>
+<h3 style="margin-top:18px">Prix au litre (€)</h3><canvas id="priceChart" width="720" height="300"></canvas>
+<div class="muted">Les graphiques sont calculés uniquement avec les données que tu as saisies.</div></div>
+</section>
+<section id="prices" class="panel">
+<div class="card"><h2>Consulter les tarifs des carburants</h2><p class="muted">Consultation sur les sites officiels. Les tarifs ne sont pas encore récupérés automatiquement dans Carnet Auto.</p>
+<label for="countryPrice">Pays</label><select id="countryPrice"><option value="fr">France — prix par station</option><option value="be">Belgique — prix maximum officiel</option></select>
+<div id="frPrice"><p>Recherche de stations françaises par commune, code postal, département ou itinéraire, avec les prix déclarés pour SP95, SP98, E10, gazole, E85 et GPL.</p>
+<a class="btn" style="display:inline-block;text-decoration:none" href="https://www.prix-carburants.gouv.fr/" target="_blank" rel="noopener">Consulter les stations françaises</a>
+<p class="muted">Les données publiques françaises sont actualisées régulièrement. La date de mise à jour propre à chaque prix doit être vérifiée sur le site.</p></div>
+<div id="bePrice" class="hidden"><p>Le SPF Économie belge publie les prix maximaux réglementaires. Les stations peuvent pratiquer un tarif inférieur : ce n'est donc pas un comparateur des prix réellement facturés par chaque station.</p>
+<a class="btn" style="display:inline-block;text-decoration:none" href="https://economie.fgov.be/fr/themes/energie/prix-de-lenergie/prix-maximum-des-produits/tarif-officiel-des-produits" target="_blank" rel="noopener">Consulter le tarif belge officiel</a></div>
+</div></section>
+<section id="backup" class="panel">
+<div class="card"><h2>Exporter et sauvegarder</h2><p>Les données restent dans le stockage local de ce navigateur. Exporte régulièrement un fichier CSV ou une sauvegarde complète pour éviter toute perte si les données du navigateur sont effacées.</p>
+<div class="row"><button id="exportCsv" class="btn">Exporter les pleins (CSV)</button><button id="exportJson" class="btn secondary">Sauvegarde complète</button></div>
+<label for="importFile">Restaurer une sauvegarde JSON</label><input id="importFile" type="file" accept=".json,application/json"><button id="importJson" class="btn secondary">Importer la sauvegarde</button>
+</div>
+<div class="card"><h2>Synchronisation iCloud — étape de configuration</h2>
+<div class="notice">Cette version améliorée est prête pour une configuration CloudKit, mais la synchronisation iCloud n'est pas encore active. Il faut créer/configurer un conteneur Apple, activer CloudKit JS et l'authentification web, puis intégrer les identifiants propres à ton compte. Ne colle jamais un secret serveur dans le code d'une PWA.</div>
+<ol style="padding-left:20px;line-height:1.6">
+<li>Sur le Mac, ouvre le portail développeur Apple et vérifie l'accès à CloudKit Console.</li>
+<li>Crée un conteneur iCloud et configure son schéma dans CloudKit Console.</li>
+<li>Active les services Web et l'authentification utilisateur selon la documentation officielle.</li>
+<li>Une fois le conteneur configuré, l'application doit recevoir un module CloudKit adapté, puis être testée sur l'iPhone et l'iPad avec le même compte Apple.</li>
+</ol>
+<p><a href="https://developer.apple.com/documentation/cloudkitjs" target="_blank" rel="noopener">Documentation officielle CloudKit JS</a> · <a href="https://icloud.developer.apple.com/" target="_blank" rel="noopener">CloudKit Console</a></p>
+</div>
+<div class="card"><h2>Prix des carburants en France</h2><div class="notice">Les données publiques officielles sont publiées par le gouvernement, avec un flux instantané annoncé comme actualisé à moins de 10 minutes. L'application n'affiche pas automatiquement ces prix dans cette version, car le flux est un ZIP/XML et peut être bloqué par les règles d'accès du navigateur. Pour éviter un prix erroné, saisis le prix affiché à la pompe dans le formulaire de plein.</div><a class="btn" style="display:inline-block;text-decoration:none" href="https://www.prix-carburants.gouv.fr/" target="_blank" rel="noopener">Consulter le site officiel des prix</a><p class="muted">Flux open data officiel : <a href="https://donnees.roulez-eco.fr/opendata/instantane" target="_blank" rel="noopener">instantané des prix (XML compressé)</a>.</p></div>
+<div class="card"><h2>Réinitialiser</h2><p class="muted">Supprime définitivement les véhicules et pleins enregistrés sur cet appareil.</p><button id="clearAll" class="btn danger">Effacer toutes les données</button></div>
+</section>
+</main>
+<footer>Carnet Auto · Données stockées localement sur cet appareil.</footer>
+<script>
+const KEY='carnetAuto.v1';
+let db={cars:[],fills:[]};
+const $=id=>document.getElementById(id);
+const fmt=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const euro=n=>Number.isFinite(n)?n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'}):'—';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&Array.isArray(x.cars)&&Array.isArray(x.fills))db=x}catch(e){}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function selectedCar(){return $('dashCar').value||db.cars[0]?.id||''}
+function carName(id){return db.cars.find(c=>c.id===id)?.name||'Véhicule supprimé'}
+function carFills(id){return db.fills.filter(f=>f.carId===id).sort((a,b)=>a.odo-b.odo||a.date.localeCompare(b.date))}
+function stats(id){
+ const fs=carFills(id);let segments=[],lastFull=null,litresSince=0,spend=0,litres=0;
+ for(const f of fs){litres+=Number(f.litres)||0;spend+=Number(f.total)||0;
+   if(lastFull){litresSince+=Number(f.litres)||0;if(f.full){const km=f.odo-lastFull.odo;if(km>0&&litresSince>0)segments.push({date:f.date,km,litres:litresSince,cons:litresSince/km*100,price:f.price,total:f.total});lastFull=f;litresSince=0;}}
+   else if(f.full){lastFull=f;litresSince=0;}
+ }
+ const km=segments.reduce((s,x)=>s+x.km,0),used=segments.reduce((s,x)=>s+x.litres,0);
+ return {fs,segments,avg:km>0?used/km*100:NaN,km,litres,spend};
+}
+function options(select,all=true){const el=$(select),old=el.value;el.innerHTML=(all?'<option value="all">Tous les véhicules</option>':'')+db.cars.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}${c.plate?' · '+esc(c.plate):''}</option>`).join('');if([...el.options].some(o=>o.value===old))el.value=old;else if(db.cars.length)el.value=db.cars[0].id}
+function renderCars(){ $('carList').innerHTML=db.cars.length?db.cars.map(c=>`<div class="list-item"><div class="row"><div><strong>${esc(c.name)}</strong><small>${esc(c.plate||'Immatriculation non renseignée')} · ${esc(c.fuel)}</small></div><div><button class="smallbtn" onclick="editCar('${c.id}')">Modifier</button> <button class="smallbtn" onclick="editCar('${c.id}')">Modifier</button><button class="smallbtn" onclick="deleteCar('${c.id}')">Supprimer</button></div></div></div>`).join(''):'<div class="empty">Aucun véhicule. Ajoute ta première voiture ci-dessus.</div>'}
+function renderFills(){let id=$('historyCar').value||'all';let fs=db.fills.filter(f=>id==='all'||f.carId===id).sort((a,b)=>b.date.localeCompare(a.date)||b.odo-a.odo);
+$('fillList').innerHTML=fs.length?fs.map(f=>`<div class="list-item"><div class="row"><div><strong>${esc(f.date)} · ${esc(carName(f.carId))}</strong><small>${fmt(f.odo,0)} km · ${fmt(f.litres,2)} L · ${f.full?'<span class="success">Plein complet</span>':'Plein partiel'}</small><small>${brandLabel(f.brand)} · ${esc(f.station||'')} ${f.price!=null?'· '+fmt(f.price,3)+' €/L':''} ${f.total!=null?'· '+euro(f.total):''}</small></div><button class="smallbtn" onclick="deleteFill('${f.id}')">Supprimer</button></div>${f.notes?`<small>${esc(f.notes)}</small>`:''}</div>`).join(''):'<div class="empty">Aucun plein enregistré pour ce filtre.</div>'}
+function renderRecent(){const id=selectedCar();const fs=carFills(id).slice(-4).reverse();$('recent').innerHTML=fs.length?fs.map(f=>`<div class="list-item"><strong>${esc(f.date)} · ${fmt(f.litres,2)} L</strong><small>${fmt(f.odo,0)} km · ${f.total!=null?euro(f.total):'montant non renseigné'} · ${f.full?'Plein complet':'Partiel'} · ${brandLabel(f.brand)}</small></div>`).join(''):'<div class="empty">Ajoute un véhicule et enregistre ton premier plein pour commencer.</div>'}
+
+const BRAND_NAMES={totalenergies:'TotalEnergies',shell:'Shell',esso:'Esso',bp:'BP',avia:'AVIA',eni:'Eni / Agip',q8:'Q8',texaco:'Texaco',intermarche:'Intermarché',leclerc:'E.Leclerc',carrefour:'Carrefour',auchan:'Auchan',colruyt:'Colruyt',independent:'Indépendante / autre',other:'Autre enseigne'};
+const BRAND_SHORT={totalenergies:'TOTAL',shell:'SHELL',esso:'ESSO',bp:'bp',avia:'AVIA',eni:'Eni',q8:'Q8',texaco:'TEXACO',intermarche:'INTER',leclerc:'E.LECLERC',carrefour:'CARREFOUR',auchan:'AUCHAN',colruyt:'COLRUYT',independent:'AUTRE',other:'AUTRE'};
+function brandLabel(id){return BRAND_NAMES[id]||BRAND_NAMES.independent}
+function brandBadge(id){const b=id||'independent';return `<span class="brand-icon brand-${esc(b)}" aria-label="${esc(brandLabel(b))}" title="${esc(brandLabel(b))}">${esc(BRAND_SHORT[b]||'AUTRE')}</span>`}
+function renderBrandDashboard(){
+ const id=selectedCar(),fills=db.fills.filter(f=>f.carId===id),groups={};
+ for(const f of fills){const b=f.brand||'independent';if(!groups[b])groups[b]={litres:0,euros:0,count:0};groups[b].litres+=Number(f.litres)||0;groups[b].euros+=Number(f.total)||0;groups[b].count++}
+ const sorted=Object.entries(groups).sort((a,b)=>b[1].euros-a[1].euros);
+ $('brandDashboard').innerHTML=sorted.length?sorted.map(([b,x])=>`<div class="brand-summary"><div class="name">${brandBadge(b)}<span>${esc(brandLabel(b))}<br><small class="muted">${x.count} plein(s)</small></span></div><div style="text-align:right"><strong>${fmt(x.litres,1)} L</strong><br><small class="muted">litres</small></div><div style="text-align:right"><strong>${euro(x.euros)}</strong><br><small class="muted">dépensés</small></div></div>`).join(''):'<div class="empty">Les dépenses par enseigne apparaîtront après les premiers pleins enregistrés.</div>';
+}
+
+function renderDashboard(){const s=stats(selectedCar());$('avg').textContent=Number.isFinite(s.avg)?fmt(s.avg,2):'—';$('distance').textContent=s.km?fmt(s.km,0):'—';$('litres').textContent=fmt(s.litres,1);$('spend').textContent=euro(s.spend);renderRecent();renderBrandDashboard();drawLine($('dashChart'),s.segments.map(x=>({label:x.date.slice(5),value:x.cons})), 'L/100 km')}
+function drawLine(canvas,points,unit){const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);const vals=points.map(p=>p.value).filter(Number.isFinite);if(vals.length<1){ctx.fillStyle='#65718a';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('Pas encore assez de données',w/2,h/2);return}
+const pad={l:55,r:20,t:24,b:44},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,min=Math.min(...vals)*.9,max=Math.max(...vals)*1.1||1;ctx.strokeStyle='#e1e7f0';ctx.lineWidth=1;ctx.fillStyle='#65718a';ctx.font='13px sans-serif';ctx.textAlign='right';
+for(let i=0;i<=4;i++){let y=pad.t+ph*i/4,v=max-(max-min)*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(v.toFixed(1),pad.l-8,y+4)}
+ctx.strokeStyle='#2463eb';ctx.lineWidth=4;ctx.beginPath();points.forEach((p,i)=>{let x=pad.l+(points.length===1?pw/2:pw*i/(points.length-1)),y=pad.t+ph-(p.value-min)/(max-min||1)*ph;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();
+points.forEach((p,i)=>{let x=pad.l+(points.length===1?pw/2:pw*i/(points.length-1)),y=pad.t+ph-(p.value-min)/(max-min||1)*ph;ctx.fillStyle='#2463eb';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();if(points.length<=9){ctx.fillStyle='#172033';ctx.textAlign='center';ctx.font='12px sans-serif';ctx.fillText(p.value.toFixed(1),x,y-12);ctx.fillStyle='#65718a';ctx.fillText(p.label,x,h-17)}})}
+function drawBars(canvas,points){const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);if(!points.length){ctx.fillStyle='#65718a';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('Pas encore de données',w/2,h/2);return}const pad={l:52,r:15,t:22,b:45},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,max=Math.max(...points.map(p=>p.value),1)*1.15;ctx.strokeStyle='#e1e7f0';ctx.fillStyle='#65718a';ctx.font='12px sans-serif';for(let i=0;i<=4;i++){let y=pad.t+ph*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.textAlign='right';ctx.fillText((max*(1-i/4)).toFixed(0),pad.l-8,y+4)}const step=pw/points.length,bw=Math.min(42,step*.65);points.forEach((p,i)=>{let bh=p.value/max*ph,x=pad.l+step*i+(step-bw)/2,y=pad.t+ph-bh;ctx.fillStyle='#2463eb';ctx.fillRect(x,y,bw,bh);ctx.fillStyle='#65718a';ctx.textAlign='center';ctx.fillText(p.label,x+bw/2,h-17);if(points.length<10){ctx.fillStyle='#172033';ctx.fillText(p.value.toFixed(0),x+bw/2,y-6)}})}
+function renderStats(){const id=$('statsCar').value||selectedCar(),s=stats(id);drawLine($('consChart'),s.segments.map(x=>({label:x.date.slice(5),value:x.cons})),'L/100 km');
+const months={};for(const f of s.fs){if(f.total!=null){const m=f.date.slice(0,7);months[m]=(months[m]||0)+Number(f.total)}}drawBars($('costChart'),Object.entries(months).sort().slice(-12).map(([label,value])=>({label:label.slice(5),value})));
+drawLine($('priceChart'),s.fs.filter(f=>f.price!=null).map(f=>({label:f.date.slice(5),value:Number(f.price)})),'€/L')}
+function renderAll(){['dashCar','fillCar','historyCar','statsCar'].forEach((id)=>options(id,id==='historyCar'));renderCars();renderFills();renderDashboard();renderStats()}
+function deleteCar(id){if(!confirm('Supprimer ce véhicule et tous ses pleins ?'))return;db.cars=db.cars.filter(c=>c.id!==id);db.fills=db.fills.filter(f=>f.carId!==id);save()}
+function deleteFill(id){if(!confirm('Supprimer ce plein ?'))return;db.fills=db.fills.filter(f=>f.id!==id);save()}
+function editCar(id){const c=db.cars.find(x=>x.id===id);if(!c)return;const name=prompt('Nom du véhicule',c.name);if(name===null)return;if(!name.trim()){alert('Le nom ne peut pas être vide.');return}const plate=prompt('Immatriculation',c.plate||'');if(plate===null)return;const fuel=prompt('Carburant',c.fuel);if(fuel===null)return;c.name=name.trim();c.plate=plate.trim().toUpperCase();c.fuel=fuel.trim()||c.fuel;save()}
+window.editCar=editCar;window.deleteCar=deleteCar;window.deleteFill=deleteFill;window.editCar=editCar;
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));if(b.dataset.tab==='stats')renderStats()}));
+$('carForm').addEventListener('submit',e=>{e.preventDefault();db.cars.push({id:crypto.randomUUID(),name:$('carName').value.trim(),plate:$('plate').value.trim().toUpperCase(),fuel:$('fuelType').value});e.target.reset();save();$('fillDate').value=new Date().toISOString().slice(0,10);alert('Véhicule ajouté.')});
+$('fillForm').addEventListener('submit',e=>{e.preventDefault();if(!db.cars.length){alert('Ajoute d’abord un véhicule.');return}const id=$('fillCar').value,odo=Number($('odo').value),litres=Number($('volume').value),price=$('price').value===''?null:Number($('price').value),total=$('total').value===''?(price===null?null:price*litres):Number($('total').value);const prev=carFills(id);if(prev.length&&odo<prev[prev.length-1].odo){if(!confirm('Le kilométrage est inférieur au dernier relevé. Enregistrer quand même ?'))return}db.fills.push({id:crypto.randomUUID(),carId:id,date:$('fillDate').value,odo,litres,price,total,brand:$('brand').value,station:$('station').value.trim(),full:$('fullTank').checked,notes:$('notes').value.trim()});e.target.reset();$('fillDate').value=new Date().toISOString().slice(0,10);$('fullTank').checked=true;save();alert('Plein enregistré.')});
+$('dashCar').addEventListener('change',renderDashboard);$('historyCar').addEventListener('change',renderFills);$('statsCar').addEventListener('change',renderStats);
+$('price').addEventListener('input',()=>{const p=Number($('price').value),v=Number($('volume').value);if($('price').value!==''&&v>0)$('total').value=(p*v).toFixed(2)});$('volume').addEventListener('input',()=>{$('price').dispatchEvent(new Event('input'))});
+function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('exportJson').addEventListener('click',()=>download('carnet-auto-sauvegarde.json',JSON.stringify(db,null,2),'application/json'));
+$('exportCsv').addEventListener('click',()=>{const rows=[['Date','Vehicule','Immatriculation','Carburant','Petrolier','Kilometrage_km','Litres','Plein_complet','Prix_litre_EUR','Montant_EUR','Station','Note'],...db.fills.map(f=>{const c=db.cars.find(x=>x.id===f.carId)||{};return [f.date,c.name||'',c.plate||'',c.fuel||'',brandLabel(f.brand),f.odo,f.litres,f.full?'oui':'non',f.price??'',f.total??'',f.station||'',f.notes||'']})];const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');download('carnet-auto-pleins.csv','\ufeff'+csv,'text/csv;charset=utf-8')});
+$('importJson').addEventListener('click',async()=>{const file=$('importFile').files[0];if(!file){alert('Choisis un fichier JSON.');return}try{const x=JSON.parse(await file.text());if(!Array.isArray(x.cars)||!Array.isArray(x.fills))throw Error();if(!confirm('Remplacer les données actuelles par cette sauvegarde ?'))return;db=x;save();alert('Sauvegarde restaurée.')}catch(e){alert('Fichier invalide ou incompatible.')}});
+$('clearAll').addEventListener('click',()=>{if(confirm('Effacer définitivement tous les véhicules et pleins de cet appareil ?')){db={cars:[],fills:[]};save()}});
+$('countryPrice').addEventListener('change',()=>{$('frPrice').classList.toggle('hidden',$('countryPrice').value!=='fr');$('bePrice').classList.toggle('hidden',$('countryPrice').value!=='be')});
+load();$('fillDate').value=new Date().toISOString().slice(0,10);renderAll();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
