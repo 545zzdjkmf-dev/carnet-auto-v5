@@ -1,25 +1,14 @@
 {
-  "name": "Carnet Auto - Consommation et préparation de trajet",
+  "name": "Carnet Auto",
   "short_name": "Carnet Auto",
-  "description": "Suivi des pleins, consommation, budget et estimation de carburant pour les trajets",
-  "start_url": "./index.html",
+  "description": "Suivi des pleins, consommation et dépenses automobiles",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f3f6fb",
   "theme_color": "#142b4a",
-  "lang": "fr",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
+    {"src":"icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icon-512.png","sizes":"512x512","type":"image/png"}
   ]
 }

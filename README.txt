@@ -1,64 +1,31 @@
-CARNET AUTO — PWA de suivi des pleins (version 5) (version 2)
-=====================================
+CARNET AUTO V6 — correction + synchronisation Firebase
 
 CONTENU
-- index.html : application complète
-- manifest.json : configuration PWA
-- sw.js : cache hors ligne
-- icon-192.png et icon-512.png : icônes
+- index.html : application corrigée, sélecteur de pétrolier, synchronisation Firebase Auth + Cloud Firestore
+- manifest.json, sw.js et icônes : installation PWA
+- firestore.rules : règles de sécurité à publier dans Firebase
 
-FONCTIONS
-- Gestion de plusieurs véhicules
-- Enregistrement des pleins complets et partiels
-- Historique avec kilométrage, litres, prix, montant et station
-- Calcul de consommation entre pleins complets successifs, en tenant compte des pleins partiels intermédiaires
-- Moyenne pondérée depuis le début du suivi
-- Graphiques de consommation, dépenses mensuelles et prix au litre
-- Export CSV compatible avec Excel, sauvegarde/restauration JSON
-- Stockage local dans le navigateur
-- Tableau de bord optimisé pour écran iPad/tablette, avec graphiques plus larges
-- État de synchronisation explicite et guide de préparation CloudKit
+ETAPE 1 — METTRE A JOUR GITHUB
+Dans le dépôt GitHub car​net-auto-v5, ouvrir Add file > Upload files et déposer TOUS les fichiers de cette archive (index.html, manifest.json, sw.js, icon-192.png, icon-512.png). Valider avec Commit changes. Attendre le redéploiement GitHub Pages puis recharger le site.
 
-INSTALLATION SUR IPHONE/IPAD (iOS/iPadOS 27)
-1. Décompresser le ZIP sur un ordinateur.
-2. Publier le contenu du dossier sur un hébergement HTTPS statique (par exemple GitHub Pages ou Netlify). Garder ensemble les 5 fichiers.
-3. Ouvrir l'adresse HTTPS dans Safari sur l'iPhone/iPad.
-4. Toucher Partager, puis « Ajouter à l'écran d'accueil ».
-5. Activer « Ouvrir comme app web » si l'option apparaît, puis toucher Ajouter.
+ETAPE 2 — ACTIVER L'AUTHENTIFICATION
+Dans Firebase Console > Authentication > Sign-in method, activer « E-mail / mot de passe ».
+
+ETAPE 3 — ENREGISTRER L'APPLICATION WEB
+Dans Firebase Console > Paramètres du projet (roue dentée) > Général > Vos applications, ajouter une application Web (icône </>) si elle n'existe pas déjà. Copier les champs apiKey, authDomain, projectId et appId.
+Dans Carnet Auto > Export & sauvegarde > Synchronisation entre appareils, coller ces quatre valeurs puis cliquer « Enregistrer la configuration Firebase ».
+La configuration Web n'est pas une clé privée. Ne jamais copier de clé privée ou de compte de service dans le navigateur.
+
+ETAPE 4 — SECURISER FIRESTORE
+Firebase Console > Firestore Database > Règles. Remplacer les règles par le contenu de firestore.rules puis cliquer Publier.
+Ces règles autorisent uniquement un utilisateur connecté à lire/écrire sous son propre identifiant. Ne pas activer des règles publiques allow read, write: if true.
+
+ETAPE 5 — CREER LE COMPTE ET SYNCHRONISER
+Dans l'application, saisir une adresse e-mail et un mot de passe d'au moins 6 caractères puis cliquer « Créer un compte ». Sur les autres appareils, ouvrir la même URL et se connecter avec ce même compte.
+Au premier appareil, si Firestore ne contient pas encore de sauvegarde, l'application y copie les données locales. Sur les autres appareils, la sauvegarde cloud existante est chargée.
 
 IMPORTANT
-- Pour une vraie installation PWA et le fonctionnement hors ligne, l'application doit être servie en HTTPS (ou depuis localhost pour les tests). Ouvrir index.html directement depuis Fichiers ne suffit pas pour activer le service worker.
-- Les données sont locales au navigateur/appareil et ne sont pas synchronisées entre iPhone et iPad. Exporter régulièrement une sauvegarde JSON.
-- L'accès aux tarifs officiels ouvre le site gouvernemental. L'import automatique du flux live n'est pas activé dans cette version : le flux officiel est un fichier ZIP/XML et l'accès direct depuis une PWA peut être bloqué par CORS. Les prix saisis au plein restent disponibles sans connexion.
-- La consommation affichée utilise les intervalles entre deux pleins complets successifs. Les litres de tous les pleins (y compris partiels) intermédiaires sont additionnés. Le premier plein complet sert de point de départ et ne crée pas de consommation avant qu'un plein complet suivant soit enregistré.
-- Cette version est une première version autonome ; teste et exporte les données régulièrement avant d'y enregistrer un historique important.
-
-SYNCHRONISATION ICLOUD / CLOUDKIT
-La synchronisation multi-appareil n'est PAS encore active dans cette archive.
-CloudKit JS nécessite un conteneur Apple, un schéma, une configuration Web et une authentification utilisateur. Ces éléments sont spécifiques au compte du propriétaire et ne peuvent pas être créés à sa place sans accès à son compte Apple Developer / CloudKit Console.
-Ne place jamais une clé privée serveur dans le JavaScript client.
-Documentation officielle : https://developer.apple.com/documentation/cloudkitjs
-Console : https://icloud.developer.apple.com/
-
-VERSION 3
-- Ajout/modification/suppression de plusieurs véhicules, historique séparé
-- Onglet France/Belgique de consultation Web des sources officielles
-- France : prix des stations, via le site gouvernemental
-- Belgique : prix maximaux du SPF Économie, pas prix de chaque station
-- Pas de récupération automatique des tarifs dans l'interface (liens externes)
-- La synchronisation iCloud reste à configurer et à développer ; les données restent locales
-
-NOUVEAU — PRÉPARATION DE TRAJET
-- Onglet « Trajet & autonomie » : saisie d'un départ, d'une destination et estimation de distance routière via les services publics OpenStreetMap/Nominatim et OSRM, si accessibles.
-- Saisie manuelle de la distance possible si le service est indisponible.
-- Estimation du carburant nécessaire, aller simple ou aller-retour.
-- Estimation du carburant restant : capacité de réservoir configurée, kilomètres parcourus depuis le dernier plein complet et pleins partiels ajoutés ensuite.
-- La consommation réelle moyenne est privilégiée ; sinon, la consommation théorique du véhicule est utilisée.
-- Pour cette fonction, renseigner la capacité du réservoir et la consommation théorique dans la fiche du véhicule. Les données de trajet sont des estimations, pas une garantie d'autonomie.
-- L'itinéraire automatique dépend d'API publiques externes, sans garantie de disponibilité. Vérifier la distance avec Plans/Google Maps.
-
-MODIFICATION DES VEHICULES
-Dans « Mes voitures », le bouton Modifier permet de compléter ou corriger le nom, l'immatriculation, le carburant, la capacité du réservoir et la consommation théorique.
-
-NOUVEAU — PETROLIERS / ENSEIGNES
-Sélection de TotalEnergies, Shell, Esso, BP, AVIA, Eni/Agip, Q8, Texaco, enseignes de grande distribution ou station indépendante. Le tableau de bord par véhicule totalise litres, euros et nombre de pleins par enseigne. L'enseigne est incluse dans l'export CSV. Les identifiants de marque sont affichés en badges textuels stylisés, pas en logos graphiques officiels.
+- La synchronisation Firebase est ajoutée au code, mais ne fonctionnera qu'après les étapes de configuration ci-dessus.
+- Avant de démarrer, utiliser « Sauvegarde complète » pour télécharger un JSON de sécurité.
+- Les données sont stockées dans un document par compte. Pour l'instant, les mises à jour sont synchronisées à l'enregistrement; ce n'est pas une fusion intelligente des modifications simultanées sur deux appareils. Éviter de modifier les données sur plusieurs appareils exactement au même moment.
+- Les prix des stations ne sont pas importés automatiquement; les liens officiels restent accessibles dans l'onglet Prix France / Belgique.
