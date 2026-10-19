@@ -197,18 +197,61 @@ $('exportCsv').addEventListener('click',()=>{const rows=[['Date','Vehicule','Imm
 $('importJson').addEventListener('click',async()=>{const file=$('importFile').files[0];if(!file){alert('Choisis un fichier JSON.');return}try{const x=JSON.parse(await file.text());if(!Array.isArray(x.cars)||!Array.isArray(x.fills))throw Error();if(!confirm('Remplacer les données actuelles par cette sauvegarde ?'))return;db=x;save();alert('Sauvegarde restaurée.')}catch(e){alert('Fichier invalide ou incompatible.')}});
 $('clearAll').addEventListener('click',()=>{if(confirm('Effacer définitivement tous les véhicules et pleins de cet appareil ?')){db={cars:[],fills:[]};save()}});
 $('countryPrice').addEventListener('change',()=>{$('frPrice').classList.toggle('hidden',$('countryPrice').value!=='fr');$('bePrice').classList.toggle('hidden',$('countryPrice').value!=='be')});
-let firebaseApp=null, firebaseDb=null, firebaseAuth=null, firebaseUser=null, syncBusy=false;
+let firebaseApp=null, firebaseDb=null, firebaseAuth=null, firebaseUser=null, syncBusy=false, syncPending=false, unsubscribeCloud=null;
 window.firebaseDb=null;window.firebaseUser=null;
 function setFirebaseStatus(msg){const el=$('firebaseStatus');if(el)el.textContent=msg}
 function getFirebaseConfig(){try{return JSON.parse(localStorage.getItem('carnetAuto.firebaseConfig')||'null')}catch(e){return null}}
 function initFirebase(cfg){
  if(!window.firebase||!firebase.initializeApp){setFirebaseStatus('Impossible de charger Firebase. Vérifie la connexion Internet puis recharge la page.');return false}
  try{if(firebase.apps.length)firebaseApp=firebase.app();else firebaseApp=firebase.initializeApp(cfg);firebaseAuth=firebase.auth();firebaseDb=firebase.firestore();window.firebaseDb=firebaseDb;
- firebaseAuth.onAuthStateChanged(async user=>{firebaseUser=user;window.firebaseUser=user;if(user){setFirebaseStatus('Connecté : '+user.email+' — chargement des données cloud…');await loadFromCloud();}else setFirebaseStatus('Firebase configuré, mais aucun compte connecté.');});return true
+ firebaseAuth.onAuthStateChanged(async user=>{firebaseUser=user;window.firebaseUser=user;if(unsubscribeCloud){unsubscribeCloud();unsubscribeCloud=null;}if(user){setFirebaseStatus('Connecté : '+user.email+' — chargement des données cloud…');await loadFromCloud();if(firebaseUser&&firebaseUser.uid===user.uid)startCloudListener(user);}else setFirebaseStatus('Firebase configuré, mais aucun compte connecté.');});return true
  }catch(e){setFirebaseStatus('Configuration Firebase invalide : '+e.message);return false}
 }
-async function syncToCloud(){if(!firebaseUser||!firebaseDb||syncBusy)return;syncBusy=true;try{await firebaseDb.collection('users').doc(firebaseUser.uid).collection('app').doc('data').set({payload:db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});setFirebaseStatus('Synchronisé avec Firebase — '+firebaseUser.email)}finally{syncBusy=false}}
-async function loadFromCloud(){if(!firebaseUser||!firebaseDb)return;try{const ref=firebaseDb.collection('users').doc(firebaseUser.uid).collection('app').doc('data');const snap=await ref.get();if(snap.exists&&snap.data().payload){const cloud=snap.data().payload;if(Array.isArray(cloud.cars)&&Array.isArray(cloud.fills)){db=cloud;localStorage.setItem(KEY,JSON.stringify(db));renderAll();setFirebaseStatus('Données chargées depuis Firebase — '+firebaseUser.email);return}}await syncToCloud();setFirebaseStatus('Première synchronisation terminée — données locales copiées dans Firebase.')}catch(e){setFirebaseStatus('Échec du chargement cloud : '+e.message+'. Vérifie les règles Firestore.')}}
+async function syncToCloud(){
+ if(!firebaseUser||!firebaseDb)return;
+ if(syncBusy){syncPending=true;return;}
+ syncBusy=true;
+ try{
+  do{
+   syncPending=false;
+   const uid=firebaseUser.uid;
+   const payload=JSON.parse(JSON.stringify(db));
+   await firebaseDb.collection('users').doc(uid).collection('app').doc('data').set({payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  }while(syncPending&&firebaseUser);
+  if(firebaseUser)setFirebaseStatus('Synchronisé avec Firebase — '+firebaseUser.email);
+ }catch(e){setFirebaseStatus('Erreur de synchronisation : '+(e.message||e));throw e}
+ finally{syncBusy=false;if(syncPending&&firebaseUser)syncToCloud().catch(()=>{});}
+}
+async function loadFromCloud(){
+ if(!firebaseUser||!firebaseDb)return;
+ try{
+  const uid=firebaseUser.uid;
+  const ref=firebaseDb.collection('users').doc(uid).collection('app').doc('data');
+  const snap=await ref.get();
+  if(!firebaseUser||firebaseUser.uid!==uid)return;
+  if(snap.exists&&snap.data().payload){
+   const cloud=snap.data().payload;
+   if(Array.isArray(cloud.cars)&&Array.isArray(cloud.fills)){
+    db=cloud;localStorage.setItem(KEY,JSON.stringify(db));renderAll();setFirebaseStatus('Données chargées depuis Firebase — '+firebaseUser.email);return;
+   }
+  }
+  await syncToCloud();
+  setFirebaseStatus('Première synchronisation terminée — données locales copiées dans Firebase.');
+ }catch(e){setFirebaseStatus('Échec du chargement cloud : '+e.message+'. Vérifie la connexion et les règles Firestore.')}
+}
+function startCloudListener(user){
+ if(!firebaseDb||!user)return;
+ const ref=firebaseDb.collection('users').doc(user.uid).collection('app').doc('data');
+ unsubscribeCloud=ref.onSnapshot(snap=>{
+  if(!firebaseUser||firebaseUser.uid!==user.uid||!snap.exists)return;
+  const cloud=snap.data()?.payload;
+  if(!cloud||!Array.isArray(cloud.cars)||!Array.isArray(cloud.fills))return;
+  if(JSON.stringify(db)===JSON.stringify(cloud))return;
+  if(syncBusy){syncPending=true;return;}
+  db=cloud;localStorage.setItem(KEY,JSON.stringify(db));renderAll();
+  setFirebaseStatus('Synchronisation en temps réel — '+user.email);
+ },err=>setFirebaseStatus('Erreur de synchronisation en temps réel : '+err.message));
+}
 $('firebaseConfigForm').addEventListener('submit',e=>{e.preventDefault();const cfg={apiKey:$('fbApiKey').value.trim(),authDomain:$('fbAuthDomain').value.trim(),projectId:$('fbProjectId').value.trim(),appId:$('fbAppId').value.trim()};localStorage.setItem('carnetAuto.firebaseConfig',JSON.stringify(cfg));if(initFirebase(cfg))setFirebaseStatus('Configuration enregistrée. Connecte-toi ou crée ton compte.');});
 $('authForm').addEventListener('submit',async e=>{e.preventDefault();if(!firebaseAuth){alert('Enregistre d’abord la configuration Firebase.');return}try{await firebaseAuth.signInWithEmailAndPassword($('authEmail').value.trim(),$('authPassword').value);setFirebaseStatus('Connexion en cours…')}catch(err){alert('Connexion impossible : '+err.message)}});
 $('createAccount').addEventListener('click',async()=>{if(!firebaseAuth){alert('Enregistre d’abord la configuration Firebase.');return}try{await firebaseAuth.createUserWithEmailAndPassword($('authEmail').value.trim(),$('authPassword').value);alert('Compte créé. Tu es connecté.')}catch(err){alert('Création du compte impossible : '+err.message)}});
