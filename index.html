@@ -101,12 +101,13 @@ main{max-width:1180px}
 <form id="routeForm">
 <label for="routeCar">Véhicule</label><select id="routeCar"></select>
 <div class="grid formgrid"><div><label for="routeFrom">Départ *</label><input id="routeFrom" required placeholder="Ex. Lille, France"></div><div><label for="routeTo">Arrivée *</label><input id="routeTo" required placeholder="Ex. Bruxelles, Belgique"></div>
+<div style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:9px;font-weight:600"><input id="routeRoundTrip" type="checkbox" style="width:auto;margin:0"> Aller-retour (multiplier la distance, les litres et le coût par 2)</label></div>
 <div><label for="routeConsumption">Consommation estimée (L/100 km) *</label><input id="routeConsumption" type="number" min="0.1" max="60" step="0.1" required value="6.5"></div>
-<div><label for="routePrice">Prix du carburant (€/L), facultatif</label><input id="routePrice" type="number" min="0" step="0.001" placeholder="Ex. 1,75"></div></div>
+<div><label for="routePrice">Prix du carburant (€/L), facultatif</label><input id="routePrice" type="number" min="0" step="0.001" placeholder="Ex. 1,75"></div><div><label for="routeToll">Péages pour l’aller (€), facultatif</label><input id="routeToll" type="number" min="0" step="0.01" placeholder="Ex. 18,50"></div></div>
 <button class="btn" id="routeCalculate" type="submit">Calculer l’itinéraire et les litres</button>
 </form><div id="routeStatus" class="notice" style="margin-top:14px">Renseigne les deux lieux puis lance le calcul. Une connexion Internet est nécessaire.</div>
-<div id="routeResult" class="grid metrics hidden" style="margin-top:14px"><div class="metric"><small>Distance routière</small><strong id="routeDistance">—</strong><span>km</span></div><div class="metric"><small>Carburant estimé</small><strong id="routeLitres">—</strong><span>litres</span></div><div class="metric"><small>Coût estimé</small><strong id="routeCost">—</strong><span>selon le prix saisi</span></div></div>
-<p class="muted">Estimation indicative : le résultat dépend de l’itinéraire trouvé et de la consommation saisie. Le trafic, le relief, la météo et le style de conduite peuvent modifier la consommation. Le calcul d’itinéraire utilise des services cartographiques en ligne.</p>
+<div id="routeResult" class="grid metrics hidden" style="margin-top:14px"><div class="metric"><small>Distance routière</small><strong id="routeDistance">—</strong><span>km</span></div><div class="metric"><small>Carburant estimé</small><strong id="routeLitres">—</strong><span>litres</span></div><div class="metric"><small>Coût carburant</small><strong id="routeCost">—</strong><span>selon le prix au litre</span></div><div class="metric"><small>Péages estimés</small><strong id="routeTollCost">—</strong><span>selon le montant saisi</span></div><div class="metric"><small>Coût total estimé (modifiable)</small><input id="routeTotalCost" type="number" min="0" step="0.01" placeholder="Calculé automatiquement" style="width:100%;font-size:22px;font-weight:800;color:var(--navy);border:1px solid var(--line);border-radius:8px;padding:8px"><span>Valeur préremplie, modifiable</span></div></div>
+<p class="muted">Estimation indicative : pour un trajet dont le départ et l’arrivée sont en France, le péage est prérempli à titre indicatif à environ 0,10 €/km de trajet (hypothèse approximative, pas un tarif officiel). Les routes sans péage peuvent donc nécessiter une correction à 0 €. Pour les trajets hors de France ou transfrontaliers, vérifie le tarif et saisis-le manuellement. Le coût total est prérempli avec carburant + péages, puis reste modifiable. En aller-retour, les montants estimés sont doublés.</p>
 </div></section>
 <section id="prices" class="panel">
 <div class="card"><h2>Consulter les tarifs des carburants</h2><p class="muted">Consultation sur les sites officiels. Les tarifs ne sont pas encore récupérés automatiquement dans Carnet Auto.</p>
@@ -246,14 +247,21 @@ $('clearAll').addEventListener('click',()=>{if(confirm('Effacer définitivement 
 function updateRouteConsumption(){const id=$('routeCar').value;const st=stats(id);if(Number.isFinite(st.avg)&&st.avg>0)$('routeConsumption').value=st.avg.toFixed(1)}
 $('routeCar').addEventListener('change',updateRouteConsumption);
 $('routeForm').addEventListener('submit',async e=>{
- e.preventDefault();const from=$('routeFrom').value.trim(),to=$('routeTo').value.trim(),cons=Number($('routeConsumption').value),price=$('routePrice').value===''?null:Number($('routePrice').value);
+ e.preventDefault();const from=$('routeFrom').value.trim(),to=$('routeTo').value.trim(),cons=Number($('routeConsumption').value),price=$('routePrice').value===''?null:Number($('routePrice').value),toll=$('routeToll').value===''?null:Number($('routeToll').value);
  if(!from||!to||!(cons>0)){alert('Renseigne le départ, l’arrivée et une consommation valide.');return}
  const btn=$('routeCalculate');btn.disabled=true;btn.textContent='Recherche de l’itinéraire…';$('routeResult').classList.add('hidden');$('routeStatus').textContent='Recherche des lieux et du meilleur itinéraire routier…';
  try{
   async function geocode(q){const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(q);const r=await fetch(url,{headers:{'Accept':'application/json'}});if(!r.ok)throw Error('Le service de recherche de lieux est momentanément indisponible.');const data=await r.json();if(!data.length)throw Error('Lieu introuvable : '+q+'. Précise la ville ou le pays.');return {lat:Number(data[0].lat),lon:Number(data[0].lon),label:data[0].display_name}}
   const a=await geocode(from);await new Promise(resolve=>setTimeout(resolve,1100));const b=await geocode(to);
   const url=`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false&alternatives=false&steps=false`;const rr=await fetch(url);if(!rr.ok)throw Error('Le calcul d’itinéraire est indisponible. Réessaie plus tard.');const route=await rr.json();if(route.code!=='Ok'||!route.routes?.length)throw Error('Aucun itinéraire routier trouvé entre ces deux lieux.');
-  const km=route.routes[0].distance/1000,litres=km*cons/100;$('routeDistance').textContent=fmt(km,1);$('routeLitres').textContent=fmt(litres,2);$('routeCost').textContent=price!==null&&price>=0?euro(litres*price):'—';$('routeResult').classList.remove('hidden');$('routeStatus').textContent=`Itinéraire estimé : ${from} → ${to}.`; 
+  const roundTrip=$('routeRoundTrip').checked;const multiplier=roundTrip?2:1;const oneWayKm=route.routes[0].distance/1000,km=oneWayKm*multiplier,litres=km*cons/100,fuelCost=price!==null&&price>=0?litres*price:null;
+  let oneWayToll=toll;
+  const bothFrance=/France/i.test(a.label)&&/France/i.test(b.label);
+  if(oneWayToll===null&&bothFrance){oneWayToll=Math.round(oneWayKm*0.10*100)/100;$('routeToll').value=oneWayToll.toFixed(2)}
+  const tollCost=oneWayToll!==null&&oneWayToll>=0?oneWayToll*multiplier:null;
+  const totalCost=fuelCost!==null||tollCost!==null?(fuelCost||0)+(tollCost||0):null;
+  $('routeDistance').textContent=fmt(km,1);$('routeLitres').textContent=fmt(litres,2);$('routeCost').textContent=fuelCost!==null?euro(fuelCost):'—';$('routeTollCost').textContent=tollCost!==null?euro(tollCost):'À saisir';$('routeTotalCost').value=totalCost!==null?totalCost.toFixed(2):'';$('routeResult').classList.remove('hidden');
+  $('routeStatus').textContent=`Itinéraire estimé : ${from} → ${to}${roundTrip?' → '+from+' (aller-retour estimé)':''}.${bothFrance&&toll===null?' Péage prérempli selon une hypothèse indicative de 0,10 €/km en France : corrige-le selon les autoroutes empruntées.':(!bothFrance&&toll===null?' Pour ce trajet, aucun tarif de péage automatique fiable n’est disponible : saisis une estimation si nécessaire.':'')}`; 
  }catch(err){$('routeStatus').textContent=err.message||'Impossible de calculer cet itinéraire. Vérifie les lieux et ta connexion.'}
  finally{btn.disabled=false;btn.textContent='Calculer l’itinéraire et les litres'}
 });
